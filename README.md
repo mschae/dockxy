@@ -35,7 +35,7 @@ Finally, add the following to your `nginx.conf` (ideally near the last closing
 bracket):
 
 ```
-inlcude /path/to/your/outDir/*;
+include /path/to/your/outDir/*;
 ```
 
 ## Caveats
