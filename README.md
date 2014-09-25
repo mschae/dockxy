@@ -28,6 +28,9 @@ dockerURL    | The address to docker (e.g. tcp://10.0.0.1:1234) | tcp://192.168.
 templatePath | Path to the nginx template                       | templates/site.tmpl
 outDir       | Directory for the generated config files         | out
 
+They are all optional. If you're using `boot2docker` there is a good chance all
+you have to do is `sudo ./dockxy`
+
 ## Caveats
 
 * The outDir will be cleaned on each run. This means all files inside will be deleted.
