@@ -31,6 +31,13 @@ outDir       | Directory for the generated config files         | out
 They are all optional. If you're using `boot2docker` there is a good chance all
 you have to do is `sudo ./dockxy`
 
+Finally, add the following to your `nginx.conf` (ideally near the last closing
+bracket):
+
+```
+inlcude /path/to/your/outDir/*;
+```
+
 ## Caveats
 
 * The outDir will be cleaned on each run. This means all files inside will be deleted.
