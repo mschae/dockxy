@@ -36,7 +36,7 @@ type Config struct {
 	IP   string
 }
 
-func regenerateConfigFiles(dockerUrl string) {
+func regenerateConfigFiles() {
 	os.RemoveAll(*outDir)
 	os.Mkdir(*outDir, 0777)
 
@@ -58,13 +58,15 @@ func fetchContainers() {
 	for _, container := range containers {
 		for _, name := range container.Names {
 			real_name := strings.Replace(name, "/", "", 1)
-			fmt.Println(real_name)
-			for _, item := range container.Ports {
-				for key, value := range item {
-					if key == "PublicPort" {
-						generateTemplate(Config{real_name, value.(float64), *dockerIP})
+			if !strings.Contains(real_name, "/") {
+				fmt.Println(real_name)
+				for _, item := range container.Ports {
+					for key, value := range item {
+						if key == "PublicPort" {
+							generateTemplate(Config{real_name, value.(float64), *dockerIP})
+						}
+						fmt.Printf("  %s: %s\n", key, value)
 					}
-					fmt.Printf("  %s: %s\n", key, value)
 				}
 			}
 		}
@@ -92,7 +94,7 @@ func generateTemplate(config Config) {
 func main() {
 	flag.Parse()
 
-	fetchContainers()
+	regenerateConfigFiles()
 
 	dockerout := exec.Command("docker", "-H="+*dockerURL, "events")
 	out, err := dockerout.StdoutPipe()
@@ -108,6 +110,6 @@ func main() {
 
 	for {
 		reader.ReadString('\n')
-		fetchContainers()
+		regenerateConfigFiles()
 	}
 }
