@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -15,9 +16,11 @@ import (
 
 var (
 	dockerIP     = flag.String("dockerIP", "192.168.59.103", "The IP address of the docker host")
-	dockerURL    = flag.String("dockerURL", "tcp://192.168.59.103:2375", "The address to docker (e.g. tcp://10.0.0.1:1234)")
+	dockerURL    = flag.String("dockerURL", "tcp://192.168.59.103:2376", "The address to docker (e.g. tcp://10.0.0.1:1234)")
 	templatePath = flag.String("templatePath", "templates/site.tmpl", "Path to the nginx template")
 	outDir       = flag.String("outDir", "out", "Directory for the generated config files")
+	certFile     = flag.String("certFile", os.Getenv("HOME")+"/.boot2docker/certs/boot2docker-vm/cert.pem", "Path to TLS certificate file")
+	keyFile      = flag.String("keyFile", os.Getenv("HOME")+"/.boot2docker/certs/boot2docker-vm/key.pem", "Path to TLS key file")
 )
 
 type Container struct {
@@ -46,8 +49,18 @@ func regenerateConfigFiles() {
 }
 
 func fetchContainers() {
-	dockerHTTPURL := strings.Replace(*dockerURL, "tcp", "http", 1)
-	resp, _ := http.Get(dockerHTTPURL + "/containers/json?all=1")
+	cert, err := tls.LoadX509KeyPair(*certFile, *keyFile)
+	if err != nil {
+		panic(err)
+	}
+
+	// Setup HTTP client
+	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	transport := &http.Transport{TLSClientConfig: tlsConfig}
+	client := &http.Client{Transport: transport}
+
+	dockerHTTPURL := strings.Replace(*dockerURL, "tcp", "https", 1)
+	resp, _ := client.Get(dockerHTTPURL + "/containers/json?all=1")
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
